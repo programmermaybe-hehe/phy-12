@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>JEE Physics Test</title>
+<style>
+body{background:#111;color:#fff;font-family:Arial;margin:0}
+#app{max-width:900px;margin:auto;padding:20px}
+.q{display:none}
+.q.active{display:block}
+.opt{margin:6px 0}
+.correct{color:#00ff7f;font-weight:bold}
+.wrong{color:#ff5555;font-weight:bold}
+#timer{font-size:22px;text-align:right}
+button{padding:10px 14px;margin:10px;background:#333;color:#fff;border:none}
+button:hover{background:#555}
+input[type=text],input[type=number]{width:80%;padding:6px}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="timer">90:00</div>
+<div id="qbox"></div>
+<button onclick="prev()">Previous</button>
+<button onclick="next()">Next</button>
+<button onclick="submitQuiz()">Submit</button>
+<div id="result"></div>
+</div>
+
+<script>
+// ===== EXACT QUESTIONS (verbatim) =====
+const questions = [
+{type:"num",text:`1)Two point charges +4 μC and −2 μC are placed 6 cm apart. Find the potential at a point 3 cm from +4 μC on the line joining them. (Take k = 9×10⁹)`},
+{type:"num",text:`2) A wire of resistivity ρ and length L is stretched so that its diameter becomes half. Find the new resistance in terms of original R.`},
+{type:"num",text:`3) In an LCR series circuit, R = 100 Ω, L = 0.2 H, C = 50 μF, and source V_m = 200 V. Find the resonant frequency and the current amplitude at resonance.`},
+{type:"num",text:`4) A convex lens forms an image 30 cm from the lens. If the object is 20 cm away, find the focal length of the lens.`},
+{type:"num",text:`5) An electron travels with speed 2×10⁶ m/s perpendicular to a magnetic field of 0.1 T. Calculate the radius of its circular path.`},
+
+{type:"mcq",text:`6) Two identical small conducting spheres, carrying charges q and 4q, are brought in contact and then separated by distance d. The electrostatic force between them becomes:`,
+opts:["A) q²/(4πε₀d²)","B) q²/(πε₀d²)","C) q²/(16πε₀d²)","D) q²/(8πε₀d²)"]},
+
+{type:"mcq",text:`7) A parallel-plate capacitor is charged and disconnected. A dielectric slab is inserted slowly. The potential difference between plates:`,
+opts:["A) Increases","B) Decreases","C) Remains same","D) Becomes zero"]},
+
+{type:"mcq",text:`8) (Assertion–Reason) Assertion (A): In series LCR at resonance, impedance is minimum. Reason (R): At resonance, inductive and capacitive reactances cancel.`,
+opts:["A) Both A & R true and R explains A","B) Both true but R doesn’t explain A","C) A true, R false","D) A false, R true"]},
+
+{type:"mcq",text:`9) Two bulbs of 40 W and 60 W rated at 220 V are connected in series across 220 V mains. The power dissipated in the 40 W bulb is approximately:`,
+opts:["A) 16 W","B) 24 W","C) 36 W","D) 48 W"]},
+
+{type:"mcq",text:`10) If current through a galvanometer is doubled, the charge shown on time base doubles. This implies galvanometer is:`,
+opts:["A) Capacitive","B) Inductive","C) Resistive","D) Non-ideal"]},
+
+{type:"mcq",text:`11) A straight wire of length 0.5 m carries 5 A at right angle to a magnetic field of 0.4 T. The force on it is:`,
+opts:["A) 1 N","B) 2 N","C) 3 N","D) 4 N"]},
+
+{type:"mcq",text:`12) Electromagnetic induction depends on:`,
+opts:["A) Change in magnetic field","B) Area change","C) Speed of motion","D) All of above"]},
+
+{type:"mcq",text:`13) A circular loop of radius 10 cm rotates at 60 Hz in a uniform magnetic field. The RMS emf induced if B = 0.2 T is:`,
+opts:["A) 10 V","B) 24 V","C) 30 V","D) 40 V"]},
+
+{type:"mcq",text:`14) In vacuum, if electric field amplitude = 50 V/m, the magnetic field amplitude is:`,
+opts:["A) 0.17 mT","B) 0.30 mT","C) 0.50 mT","D) 1.67 mT"]},
+
+{type:"mcq",text:`15) A beam of light passes from air to glass (n=1.5). The angle of refraction if angle of incidence is 30° is:`,
+opts:["A) 19.5°","B) 30°","C) 42°","D) 48°"]},
+
+{type:"mcq",text:`16) In Young’s double-slit experiment with λ=600 nm, slit separation = 0.2 mm and screen distance = 1.2 m, the fringe spacing is:`,
+opts:["A) 2.4 mm","B) 3.6 mm","C) 4.8 mm","D) 6.0 mm"]},
+
+{type:"mcq",text:`17) According to de Broglie, wavelength of electron with kinetic energy 150 eV is:`,
+opts:["A) 0.1 nm","B) 0.15 nm","C) 0.2 nm","D) 0.25 nm"]},
+
+{type:"mcq",text:`18) (Assertion–Reason) A: In photoelectric effect, stopping potential is independent of intensity. R: Increased intensity increases photocurrent but not kinetic energy of electrons.`,
+opts:["A) Both A & R true and R explains A","B) Both true but R doesn’t explain A","C) A true, R false","D) A false, R true"]},
+
+{type:"mcq",text:`19) Energy of first Bohr orbit of hydrogen is –13.6 eV. The wavelength of photon emitted when electron jumps to n=3 from n=5 is:`,
+opts:["A) 97 nm","B) 121 nm","C) 164 nm","D) 434 nm"]},
+
+{type:"mcq",text:`20) If nucleus with binding energy 7 MeV per nucleon splits releasing 180 MeV, number of nucleons involved is:`,
+opts:["A) 12","B) 14","C) 16","D) 18"]},
+
+{type:"mcq",text:`21) In a PN junction diode under forward bias:`,
+opts:["A) Depletion width increases","B) Depletion width decreases","C) No change","D) Depends on temperature"]},
+
+{type:"mcq",text:`22) A transistor in common-emitter configuration:`,
+opts:["A) Has high input impedance","B) Has high voltage gain","C) Has no current gain","D) Acts as ON/OFF switch only"]},
+
+{type:"mcq",text:`23) In an NPN transistor amplifier, if β=100, collector current = 10 mA, then base current is:`,
+opts:["A) 10 μA","B) 100 μA","C) 1 mA","D) 10 mA"]},
+
+{type:"mcq",text:`24) In a series LCR circuit at resonance, the current is:`,
+opts:["A) Maximum and equal to V/R","B) Minimum","C) Zero","D) Equal to XC"]},
+
+{type:"mcq",text:`25) (Assertion–Reason) A: Q-factor of a circuit is ratio of energy stored to energy dissipated per cycle. R: High Q means narrow bandwidth.`,
+opts:["A) Both A & R true and R explains A","B) Both true but R doesn’t explain A","C) A true, R false","D) A false, R true"]},
+
+{type:"num",text:`26) A double slit interference experiment performed with a light of wavelength 600 nm forms an interference fringe pattern on a screen with 10th bright fringe having its centre at a distance of 10 mm from the central maximum. Distance of the centre of the same 10th bright fringe from the central maximum when the source of light is replaced by another source of wavelength 660 nm would be ______ mm.`},
+
+{type:"mcq",text:`27) Two capacitors C₁ and C₂ are connected in parallel to a battery. Charge–time graph is shown below for the two capacitors. The energy stored with them are U₁ and U₂ respectively. Which of the given statements is true?`,
+img:"q27.png",
+opts:["C_2>C_1, U_2<U_1","C_1>C_2, U_1>U_2","C_1>C_2, U_1<U_2","C_2>C_1, U_2>U_1"]},
+
+{type:"mcq",text:`28) Due to presence of an electromagnetic wave whose electric component is given by E=100sin(ωt−kx) NC⁻¹ a cylinder of length 200 cm holds certain amount of electromagnetic energy inside it. If another cylinder of the same length but half the diameter than the previous one holds the same amount of EM energy, the magnitude of the electric field should be modified as:`,
+opts:["400sin(ωt−kx) NC⁻¹","200sin(ωt−kx) NC⁻¹","50sin(ωt−kx) NC⁻¹","25sin(ωt−kx) NC⁻¹"]},
+
+{type:"mcq",text:`29) A thin prism P₁ with angle 4° made of glass having refractive index 1.54 is combined with another thin prism P₂ made of glass having refractive index 1.72 to get dispersion without deviation. The angle of the prism P₂ in degrees is:`,
+opts:["3°","16/3°","4°","1.5°"]},
+
+{type:"mcq",text:`30) Consider a long thin conducting wire carrying a uniform current I. A particle having mass M and charge q is released at a distance a from the wire with a speed v₀ along the direction of current in the wire. The particle gets attracted to the wire due to magnetic force. The particle turns around when it is at a distance x from the wire. The value of x is:`,
+opts:["ae^(-(4πmv₀)/(qμ₀I))","a(1-(mv₀)/(2qμ₀I))","a(1-(mv₀)/(qμ₀I))","a/2"]},
+
+{type:"mcq",text:`31) A wire of resistance R is bent into an equilateral triangle and an identical wire is bent into a square. The ratio of resistance between the two end points of an edge of the triangle to that of the square is:`,
+opts:["8/9","27/32","32/27","9/8"]},
+
+{type:"mcq",text:`32) Find the equivalent resistance between two ends of the following circuit. (All three resistors shown have resistance r/3.)`,
+img:"q32.png",
+opts:["r/9","r/3","r","r/6"]},
+
+{type:"mcq",text:`33) Which of the following circuits has the same output as that of the given circuit?`,
+img:"q33.png",
+opts:["A","B","C","D"]},
+
+{type:"mcq",text:`34) Two resistors of 4 Ω and 6 Ω are connected in parallel across a 12 V battery. The total current drawn from the battery is:`,
+opts:["2 A","3 A","5 A","6 A"]},
+
+{type:"mcq",text:`35) An object is placed at twice the focal length (2f) of a convex lens. The image formed will be:`,
+opts:["at focus, real and inverted","at 2f, real and inverted","at infinity, virtual","between f and 2f, virtual"]}
+];
+
+// ===== ANSWER KEY (as confirmed) =====
+const answers = {
+1:"600000",2:"8R",3:"316,2",4:"12",5:"0.000114",
+6:"D",7:"B",8:"A",9:"B",10:"C",11:"D",12:"D",13:"B",14:"A",15:"A",16:"B",17:"A",18:"A",19:"C",20:"C",21:"B",22:"B",23:"B",24:"A",25:"A",
+26:"11",
+27:"D",28:"B",29:"A",30:"A",31:"C",32:"A",33:"B",34:"C",35:"B"
+};
+
+let idx=0, store=JSON.parse(localStorage.getItem("resp")||"{}");
+
+function render(){
+const q=questions[idx];
+let h=`<div class="q active"><b>${q.text}</b><br>`;
+if(q.img) h+=`<img src="${q.img}" width="400"><br>`;
+if(q.type==="mcq"){
+q.opts.forEach((o,i)=>{
+let v=String.fromCharCode(65+i);
+let chk=store[idx+1]==v?"checked":"";
+h+=`<div class="opt"><input type="radio" name="r" ${chk} onclick="save('${v}')"> ${o}</div>`;
+});
+}else{
+let val=store[idx+1]||"";
+h+=`<input value="${val}" oninput="save(this.value)">`;
+}
+h+="</div>";
+document.getElementById("qbox").innerHTML=h;
+}
+function save(v){store[idx+1]=v;localStorage.setItem("resp",JSON.stringify(store));}
+function next(){if(idx<34){idx++;render();}}
+function prev(){if(idx>0){idx--;render();}}
+
+let time=5400;
+setInterval(()=>{
+let m=Math.floor(time/60),s=time%60;
+document.getElementById("timer").innerText=m+":"+(s<10?"0":"")+s;
+if(time--<=0)submitQuiz();
+},1000);
+
+function submitQuiz(){
+let score=0,res="";
+for(let i=1;i<=35;i++){
+let u=store[i]||"",a=answers[i];
+if(u===""){ }
+else if(String(u).trim().toUpperCase()==a.toUpperCase()) score+=4;
+else score-=1;
+}
+res="Score: "+score+"/140";
+document.getElementById("result").innerText=res;
+}
+
+render();
+</script>
+</body>
+</html>
